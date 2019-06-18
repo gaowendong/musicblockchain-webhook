@@ -1,5 +1,9 @@
 'use strict';
 
+const ipfsApi = require('ipfs-api');
+const ipfs = new ipfsApi('localhost', '5001', {protocol: 'http'});
+
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
@@ -80,9 +84,9 @@ const bytecodeDeployed = storeHashContract
   .encodeABI();
   console.log(bytecodeDeployed)
 
-
+// const simpleContract = new web3.eth.Contract(abi, '0x1932c48b2bF8102Ba33B4A6B545C32236e342f34')
 // const bytecodeWithInitParam = simpleContract.methods
-//   .set(80)
+//   .sendHash("  ")
 //   .encodeABI();
 // console.log(bytecodeWithInitParam)
 
@@ -99,7 +103,7 @@ const rawTransactionManager = quorumjs.RawTransactionManager(web3, {
 });
 
 web3.eth.getTransactionCount(`0x${accAddress}`).then(txCount => {
-  console.log("enter")
+  // console.log("enter")
   const newTx = rawTransactionManager.sendRawTransaction({
     gasPrice: 0,
     gasLimit: 4300000,
@@ -193,5 +197,38 @@ web3.eth.getTransactionCount(`0x${accAddress}`).then(txCount => {
   console.log(req.body); // eslint-disable-line no-console
   return res.sendStatus(200);
 });
+
+app.post('/composer_upload', (req, res, next) => {
+
+// get the ipfs hash
+
+
+async  function connection(){
+
+  await ipfs.add(this.state.buffer, (err, ipfsHash) => {
+    console.log(err,ipfsHash);
+    //setState by setting ipfsHash to ipfsHash[0].hash 
+    this.setState({ ipfsHash:ipfsHash[0].hash });
+
+    storehash.methods.sendHash(this.state.ipfsHash).send({
+      from: accounts
+    }, (error, transactionHash) => {
+
+      const simpleContract = new web3.eth.Contract(abi, '0x1932c48b2bF8102Ba33B4A6B545C32236e342f34')
+      const bytecodeWithInitParam = simpleContract.methods
+      .sendHash(transactionHash)
+      .encodeABI();
+      console.log(bytecodeWithInitParam)
+      // console.log(transactionHash);
+      // this.setState({transactionHash});
+    }); //storehash 
+  }//await ipfs.add 
+
+}// function
+connection()
+
+});
+
+
 
 module.exports = app;
